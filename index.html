@@ -3,100 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xpertoid</title>
+    <title>Xpertoid - RPG Social</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <div id="logo">
-            <div class="olhos">X P</div>
-            <div class="sorriso">)</div>
-        </div>
-    </header>
+    <main id="app">
+        <header>
+            <h1>Xpertoid</h1>
+            <p id="status-msg">Conectado ao servidor</p>
+        </header>
 
-    <div id="tela-perfil" class="tela ativa">
-        <section class="painel-perfil">
-            <h2>Meu Perfil <span id="badge-nivel" class="badge-nivel">Lvl 1</span></h2>
+        <section id="profile-section"></section>
+
+        <section id="content">
+            <nav class="tabs">
+                <button onclick="showTab('quest-tab')">Missões</button>
+                <button onclick="showTab('feed-tab')">Feed</button>
+                <button onclick="showTab('leaderboard-tab')">Ranking</button>
+            </nav>
             
-            <div class="barra-xp-fundo">
-                <div id="barra-progresso" class="barra-xp-progresso" style="width: 10%;"></div>
-            </div>
-            <p id="texto-xp" class="texto-xp">10 / 100 XP para o Nível 2</p>
-
-            <h3>Minha Vitrine</h3>
-            <div class="vitrine">
-                <div class="broche broche-ativo" title="Gym Rat: Ouro">🏋️</div>
-                <div class="broche">2</div>
-                <div class="broche">3</div>
-            </div>
-        </section>
-    </div>
-
-    <div id="tela-feed" class="tela oculta">
-        <section class="feed">
-            <h3>Feed da Guilda</h3>
-            
-            <div class="cartao-missao">
-                <p class="autor-missao"><strong>@amigo_01</strong> completou:</p>
-                <p class="titulo-missao">Sobrevivência na Academia (Dia 1)</p>
-                
-                <div class="espaco-foto">
-                    [ FOTO DA ATIVIDADE ]
-                </div>
-                
-                <button class="btn-aprovar">👍 Aprovar +XP</button>
+            <div id="quest-tab" class="tab-content">
+                <button id="btn-abrir-camera">📸 Nova Missão</button>
+                <div id="container-missoes"></div>
             </div>
             
-            <div class="cartao-missao">
-                <p class="autor-missao"><strong>@skatista_pro</strong> completou:</p>
-                <p class="titulo-missao">Aprender manobra nova</p>
-                
-                <div class="espaco-foto">
-                    [ FOTO DA ATIVIDADE ]
-                </div>
-                
-                <button class="btn-aprovar">👍 Aprovar +XP</button>
+            <div id="feed-tab" class="tab-content hidden">
+                <div id="container-feed"></div>
+            </div>
+
+            <div id="leaderboard-tab" class="tab-content hidden">
+                <div id="container-leaderboard"></div>
             </div>
         </section>
-    </div>
+    </main>
 
-    <nav class="menu-inferior">
-        <button id="btn-nav-feed" class="item-menu">
-            🏠<br>Feed
-        </button>
-        
-        <button class="btn-menu-acao">📷</button>
-        
-        <button id="btn-nav-perfil" class="item-menu ativo">
-            👤<br>Perfil
-        </button>
-    </nav>
-
-    <div id="modal-camera" class="modal-oculto">
-        <div class="janela-modal">
-            <button id="btn-fechar" class="btn-fechar">✖</button>
-            
-            <h3 style="margin-top: 0;">Nova Missão</h3>
-            
-            <select class="input-missao">
-                <option>Escolha a atividade...</option>
-                <option>📚 Estudar (1h)</option>
-                <option>🛹 Andar de Skate</option>
-                <option>🏋️ Treino na Academia</option>
-            </select>
-            
-            <div class="visor-camera">
-                <video id="stream-camera" autoplay playsinline></video>
-                
-                <div class="guia-foco"></div>
-                <p class="dica-enquadramento">Mantenha a pessoa centralizada e próxima da câmera</p>
-            </div>
-            
-            <button id="btn-capturar" class="btn-capturar">📸 Capturar e Enviar</button>
+    <div id="modal-camera" class="hidden">
+        <video id="video-feed" autoplay playsinline></video>
+        <div class="camera-controls">
+            <button id="btn-capturar">Capturar</button>
+            <button id="btn-cancelar">Cancelar</button>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

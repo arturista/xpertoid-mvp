@@ -1,110 +1,98 @@
-// ==========================================
-// 1. LÓGICA DO MODAL DA CÂMERA E VÍDEO REAL
-// ==========================================
-const botaoAbrir = document.querySelector('.btn-menu-acao'); 
-const botaoFechar = document.getElementById('btn-fechar'); 
-const botaoCapturar = document.getElementById('btn-capturar'); 
-const modal = document.getElementById('modal-camera'); 
-const videoCamera = document.getElementById('stream-camera'); // O elemento de vídeo
+// script.js
+import { StorageService } from './services/StorageService.js';
+import { SchemaValidator } from './services/SchemaValidator.js';
+import { EngineService } from './services/EngineService.js';
+import { CameraService } from './services/CameraService.js';
+import { AchievementService } from './services/AchievementService.js';
+import { NotificationService } from './ui/NotificationService.js';
+import { Renderer } from './ui/Renderer.js';
+import { FeedRenderer } from './ui/FeedRenderer.js';
+import { ProfileRenderer } from './ui/ProfileRenderer.js';
+import { LeaderboardRenderer } from './ui/LeaderboardRenderer.js';
 
-let fluxoCamera = null; // Variável para guardar o sinal da câmera e poder desligar depois
+const storage = new StorageService();
+const ui = new Renderer('container-missoes');
+const feedUI = new FeedRenderer('container-feed');
+const profileUI = new ProfileRenderer('profile-section');
+const lbUI = new LeaderboardRenderer('container-leaderboard');
+const engine = new EngineService();
+const camera = new CameraService(document.getElementById('video-feed'));
 
-// Função auxiliar para desligar a câmera quando fechar a janela
-function desligarCamera() {
-    if (fluxoCamera) {
-        fluxoCamera.getTracks().forEach(track => track.stop());
-    }
+let appState = { xp: 0, lvl: 1, streak: 0, missoes: [], historico: [], conquistas: [] };
+
+async function bootstrap() {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+    await storage.init();
+    const savedData = await storage.loadAppState();
+    if (savedData) appState = savedData;
+    renderAll();
 }
 
-botaoAbrir.addEventListener('click', function() {
-    modal.classList.remove('modal-oculto');
-    modal.classList.add('modal-ativo');
-    
-    // Pede permissão e liga a câmera real
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-        .then(function(stream) {
-            fluxoCamera = stream;
-            videoCamera.srcObject = stream;
-        })
-        .catch(function(err) {
-            console.error("Erro ao acessar a câmera: ", err);
-            alert("Não foi possível acessar a câmera do seu dispositivo.");
-        });
-});
+function renderAll() {
+    ui.renderMissions(appState.missoes);
+    feedUI.render(appState.historico);
+    profileUI.render(appState);
+    lbUI.render(appState.historico);
+}
 
-botaoFechar.addEventListener('click', function() {
-    modal.classList.remove('modal-ativo');
-    modal.classList.add('modal-oculto');
-    desligarCamera(); // Desliga a luzinha da câmera
-});
+window.showTab = (tabId) => {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.getElementById(tabId).classList.remove('hidden');
+    renderAll();
+};
 
-botaoCapturar.addEventListener('click', function() {
-    alert('Take registrado com sucesso! 🎬 A guilda vai avaliar a sua cena para liberar o XP.');
-    modal.classList.remove('modal-ativo');
-    modal.classList.add('modal-oculto');
-    desligarCamera(); // Desliga a luzinha da câmera
-});
+document.addEventListener('click', async (e) => {
+    const id = parseInt(e.target.dataset.id);
+    if (!id) return;
 
-// ==========================================
-// 2. LÓGICA DE NAVEGAÇÃO DE TELAS
-// ==========================================
-const telaPerfil = document.getElementById('tela-perfil');
-const telaFeed = document.getElementById('tela-feed');
-const btnNavPerfil = document.getElementById('btn-nav-perfil');
-const btnNavFeed = document.getElementById('btn-nav-feed');
+    // Concluir Missão
+    if (e.target.classList.contains('btn-check')) {
+        const mission = appState.missoes.find(m => m.id === id);
+        appState = engine.processMissionCompletion(mission, appState);
+        appState.missoes = appState.missoes.filter(m => m.id !== id);
+        appState.historico.push(mission);
+        
+        // Verifica Conquistas
+        const novas = AchievementService.checkAchievements(appState);
+        if(novas.length > 0) appState.conquistas.push(...novas);
 
-btnNavFeed.addEventListener('click', function() {
-    telaPerfil.classList.remove('ativa');
-    telaPerfil.classList.add('oculta');
-    telaFeed.classList.remove('oculta');
-    telaFeed.classList.add('ativa');
+        await storage.saveAll(appState);
+        renderAll();
+        NotificationService.show(`Concluído! +${mission.xp} XP`);
+    }
 
-    btnNavPerfil.classList.remove('ativo');
-    btnNavFeed.classList.add('ativo');
-});
-
-btnNavPerfil.addEventListener('click', function() {
-    telaFeed.classList.remove('ativa');
-    telaFeed.classList.add('oculta');
-    telaPerfil.classList.remove('oculta');
-    telaPerfil.classList.add('ativa');
-
-    btnNavFeed.classList.remove('ativo');
-    btnNavPerfil.classList.add('ativo');
-});
-
-// ==========================================
-// 3. LÓGICA DE XP E GAMIFICAÇÃO
-// ==========================================
-let xpAtual = 10;
-let nivelAtual = 1;
-const xpPorAprovacao = 50; 
-
-const barraProgresso = document.getElementById('barra-progresso');
-const textoXp = document.getElementById('texto-xp');
-const badgeNivel = document.getElementById('badge-nivel');
-const botoesAprovar = document.querySelectorAll('.btn-aprovar');
-
-botoesAprovar.forEach(function(botao) {
-    botao.addEventListener('click', function() {
-        if (botao.classList.contains('btn-aprovado')) {
-            return;
+    // Like
+    if (e.target.classList.contains('btn-like')) {
+        const activity = appState.historico.find(a => a.id === id);
+        if (activity) {
+            activity.likes = (activity.likes || 0) + 1;
+            await storage.saveAll(appState);
+            renderAll();
         }
+    }
+});
 
-        botao.classList.add('btn-aprovado');
-        botao.innerHTML = '✅ Aprovado';
-
-        xpAtual = xpAtual + xpPorAprovacao;
-
-        if (xpAtual >= 100) {
-            nivelAtual = nivelAtual + 1; 
-            xpAtual = xpAtual - 100; 
-            
-            badgeNivel.innerText = 'Lvl ' + nivelAtual;
-            alert('🎉 LEVEL UP! O seu Xpertoid subiu para o Nível ' + nivelAtual + '!');
-        }
-
-        barraProgresso.style.width = xpAtual + '%';
-        textoXp.innerText = xpAtual + ' / 100 XP para o Nível ' + (nivelAtual + 1);
+// Inicialização de botões
+document.getElementById('btn-abrir-camera').onclick = () => { 
+    document.getElementById('modal-camera').classList.remove('hidden'); 
+    camera.start(); 
+};
+document.getElementById('btn-cancelar').onclick = () => { 
+    document.getElementById('modal-camera').classList.add('hidden'); 
+    camera.stop(); 
+};
+document.getElementById('btn-capturar').onclick = async () => {
+    const novaMissao = SchemaValidator.validateMission({
+        id: Date.now(),
+        nome: prompt("Nome da missão:"),
+        xp: 20,
+        difficulty: 'easy'
     });
-});
+    appState.missoes.push(novaMissao);
+    await storage.saveAll(appState);
+    document.getElementById('modal-camera').classList.add('hidden');
+    camera.stop();
+    renderAll();
+};
+
+bootstrap();
