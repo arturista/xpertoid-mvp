@@ -11,38 +11,46 @@
     <main id="app">
         <header>
             <h1>Xpertoid</h1>
-            <p id="status-msg">Conectado ao servidor</p>
+            <p id="status-msg">Conectado e Operacional</p>
         </header>
 
+        <!-- Painel do Herói -->
         <section id="profile-section"></section>
 
         <section id="content">
+            <!-- Navegação Principal -->
             <nav class="tabs">
-                <button onclick="showTab('quest-tab')">Missões</button>
-                <button onclick="showTab('feed-tab')">Feed</button>
-                <button onclick="showTab('leaderboard-tab')">Ranking</button>
+                <button class="tab-btn active" data-target="quest-tab">Missões</button>
+                <button class="tab-btn" data-target="feed-tab">Feed</button>
+                <button class="tab-btn" data-target="leaderboard-tab">Ranking</button>
             </nav>
             
+            <!-- Aba: Quest Log -->
             <div id="quest-tab" class="tab-content">
-                <button id="btn-abrir-camera">📸 Nova Missão</button>
-                <div id="container-missoes"></div>
+                <button id="btn-abrir-camera" class="btn-primary">📸 Nova Missão</button>
+                <div id="container-missoes" class="lista-container"></div>
             </div>
             
+            <!-- Aba: Feed Social -->
             <div id="feed-tab" class="tab-content hidden">
-                <div id="container-feed"></div>
+                <div id="container-feed" class="lista-container"></div>
             </div>
 
+            <!-- Aba: Hall da Fama -->
             <div id="leaderboard-tab" class="tab-content hidden">
-                <div id="container-leaderboard"></div>
+                <div id="container-leaderboard" class="lista-container"></div>
             </div>
         </section>
     </main>
 
+    <!-- Modal da Câmera (Oculto por padrão) -->
     <div id="modal-camera" class="hidden">
-        <video id="video-feed" autoplay playsinline></video>
-        <div class="camera-controls">
-            <button id="btn-capturar">Capturar</button>
-            <button id="btn-cancelar">Cancelar</button>
+        <div class="camera-container">
+            <video id="video-feed" autoplay playsinline></video>
+            <div class="camera-controls">
+                <button id="btn-capturar" class="btn-success">Capturar Prova</button>
+                <button id="btn-cancelar" class="btn-danger">Cancelar</button>
+            </div>
         </div>
     </div>
 
